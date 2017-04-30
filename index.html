@@ -2,8 +2,12 @@
 <!-- Latest compiled and minified CSS -->
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
 
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- Optional theme -->
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+
+<!-- Style sheets for the image div -->
+<link rel="stylesheet" href="styles.css">
 
 <!-- Locad JQUERY -->
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.0/jquery.min.js"></script>
@@ -13,7 +17,6 @@
 
 <script type="text/javascript" charset="utf-8">
 
-  var page_size = 2
   // Define function for querying the facts API endpoint
   function getFacts(page, callback, index) {
     console.log('requesting API')
@@ -49,23 +52,30 @@
     else if (e.keyCode == '39') {
        nextButton();
     }
-  } 
-  document.onkeydown = checkKey;
+ }
+document.onkeydown = checkKey;
+
+// image click function for details
+$(function() {
+    $('.panel-image img.panel-image-preview').on('click', function(e) {
+            console.log('clicked')
+            $(this).closest('.panel-image').toggleClass('hide-panel-body');
+    });
+});
   // do all the processing needed on initial page load
   $(document).ready(function() {
     // Get correct content from the API based on current page
     if (sessionStorage.current_page) {
-      getFacts(sessionStorage.current_page);
+      getFacts(sessionStorage.current_page, RenderFact, 0);
     } else {
       sessionStorage.current_page = 1
-      sessionStorage.current_page_data = getFacts()
     }
     // Get current page index and render the right fact
     if (sessionStorage.current_page_index) {
-      RenderFact(sessionStorage.current_page_index)
+      getFacts(sessionStorage.current_page, RenderFact, sessionStorage.current_page_index)
     } else {
-      RenderFact(0)
       sessionStorage.current_page_index = 0
+      getFacts(sessionStorage.current_page, RenderFact, sessionStorage.current_page_index)
   }});
 
   // Function to render the fact element
@@ -102,6 +112,15 @@
         getFacts(sessionStorage.current_page, RenderFact, 1)
     }
   }
+
+// Facebook share button code
+(function(d, s, id) {
+    var js, fjs = d.getElementsByTagName(s)[0];
+    if (d.getElementById(id)) return;
+    js = d.createElement(s); js.id = id;
+    js.src = "//connect.facebook.net/en_US/sdk.js#xfbml=1";
+    fjs.parentNode.insertBefore(js, fjs);
+    }(document, 'script', 'facebook-jssdk'));
 </script>
 
 </head>
@@ -134,14 +153,22 @@
     </div><!-- /.navbar-collapse -->
   </div><!-- /.container-fluid -->
 </nav>
-
-<div class="panel panel-default">
-  <div class="panel-body">
-    <div style="text-align: center; margin: auto">
-      <img id='fact_img' src=''>
-    </div>
-  </div>
-</div>
+<!--<div>-->
+   <div class="panel panel-default" style='margin: auto'>
+        <div class="panel-image hide-panel-body">
+          <img src="" style="margin: 0 auto; display: block" class="panel-image-preview" id="fact_img"/>
+        </div>
+          <div class="panel-body">
+            <h4>Title of Image</h4>
+              <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed in lobortis nisl, vitae iaculis sapien. Phasellus ultrices gravida massa luctus ornare. Suspendisse blandit quam elit, eu imperdiet neque semper et.</p>
+           </div>
+                <div class="panel-footer text-center">
+                  <!--                    <a href="#Info"><span class="fa fa-info" style="font-size: 30px; vertical-align: bottom;" id="info"></span></a> -->
+                    <a href="#facebook"><span id="FBShare" class="fa fa-facebook" style="font-size: 30px; vertical-align: bottom;"></span></a>
+                    <a href="#twitter"><span class="fa fa-twitter" style="font-size: 30px; vertical-align: bottom;"></span></a>
+                </div>
+        </div>
+        <!--</div> -->
 <!-- navigation buttons -->
 <nav aria-label="...">
   <ul class="pager">
