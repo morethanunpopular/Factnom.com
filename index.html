@@ -1,19 +1,55 @@
 <head>
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1">
 <!-- Latest compiled and minified CSS -->
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
 
 <!-- Optional theme -->
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
 
-<!-- Locad JQUERY -->
+<!-- Style sheets for the image div -->
+<link rel="stylesheet" href="styles.css">
+
+<!-- Load JQUERY -->
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.0/jquery.min.js"></script>
+
+<!-- Load Hammer.js -->
+<script src="http://hammerjs.github.io/dist/hammer.min.js"></script>
 
 <!-- Latest compiled and minified JavaScript -->
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
 
+<!-- Main Javascript for the page  -->
 <script type="text/javascript" charset="utf-8">
 
-  var page_size = 2
+  // do all the processing needed on initial page load
+  $(document).ready(function() {
+     // Capture Arrow Keys
+     document.onkeydown = checkKey;
+     // Instantiate Hammer.js and capture swipe events on the image
+     var myElement = document.getElementById("fact_img")
+     var mc = new Hammer(myElement);
+     // capture left swipe for next button
+     mc.on("swipeleft", function(ev) {
+       nextButton()
+     })
+     // capture right swipe for last button
+     mc.on("swiperight", function(ev) {
+       lastButton()
+     })
+    // Get correct content from the API based on current page
+    if (sessionStorage.current_page) {
+      getFacts(sessionStorage.current_page, RenderFact, 0);
+    } else {
+      sessionStorage.current_page = 1
+    }
+    // Get current page index and render the right fact
+    if (sessionStorage.current_page_index) {
+      getFacts(sessionStorage.current_page, RenderFact, sessionStorage.current_page_index)
+    } else {
+      sessionStorage.current_page_index = 0
+      getFacts(sessionStorage.current_page, RenderFact, sessionStorage.current_page_index)
+    }});
+
   // Define function for querying the facts API endpoint
   function getFacts(page, callback, index) {
     console.log('requesting API')
@@ -49,28 +85,17 @@
     else if (e.keyCode == '39') {
        nextButton();
     }
-  } 
-  document.onkeydown = checkKey;
-  // do all the processing needed on initial page load
-  $(document).ready(function() {
-    // Get correct content from the API based on current page
-    if (sessionStorage.current_page) {
-      getFacts(sessionStorage.current_page);
-    } else {
-      sessionStorage.current_page = 1
-      sessionStorage.current_page_data = getFacts()
-    }
-    // Get current page index and render the right fact
-    if (sessionStorage.current_page_index) {
-      RenderFact(sessionStorage.current_page_index)
-    } else {
-      RenderFact(0)
-      sessionStorage.current_page_index = 0
-  }});
+ }
+
+// image click function for details
+$(function() {
+    $('.panel-image img.panel-image-preview').on('click', function(e) {
+            $(this).closest('.panel-image').toggleClass('hide-panel-body');
+    });
+});
 
   // Function to render the fact element
   function RenderFact(index) {
-    console.log('rendering fact')
     data = JSON.parse(sessionStorage.current_page_data)
     document.getElementById("fact_img").src=data._items[index].image_url
   }
@@ -102,6 +127,7 @@
         getFacts(sessionStorage.current_page, RenderFact, 1)
     }
   }
+
 </script>
 
 </head>
@@ -134,14 +160,22 @@
     </div><!-- /.navbar-collapse -->
   </div><!-- /.container-fluid -->
 </nav>
-
-<div class="panel panel-default">
-  <div class="panel-body">
-    <div style="text-align: center; margin: auto">
-      <img id='fact_img' src=''>
-    </div>
-  </div>
-</div>
+<!--<div>-->
+   <div class="panel panel-default" style='margin: auto'>
+        <div class="panel-image hide-panel-body">
+          <img src="" style="margin: 0 auto; display: block; max-width: 100%; max-height: 66%" class="panel-image-preview" id="fact_img"/>
+        </div>
+          <div class="panel-body">
+            <h4>Title of Image</h4>
+              <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed in lobortis nisl, vitae iaculis sapien. Phasellus ultrices gravida massa luctus ornare. Suspendisse blandit quam elit, eu imperdiet neque semper et.</p>
+           </div>
+                <div class="panel-footer text-center">
+                  <!--                    <a href="#Info"><span class="fa fa-info" style="font-size: 30px; vertical-align: bottom;" id="info"></span></a> -->
+                    <a href="#facebook"><span id="FBShare" class="fa fa-facebook" style="font-size: 30px; vertical-align: bottom;"></span></a>
+                    <a href="#twitter"><span class="fa fa-twitter" style="font-size: 30px; vertical-align: bottom;"></span></a>
+                </div>
+        </div>
+        <!--</div> -->
 <!-- navigation buttons -->
 <nav aria-label="...">
   <ul class="pager">
