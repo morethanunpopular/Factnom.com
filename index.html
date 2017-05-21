@@ -58,7 +58,7 @@
       page = 1;
       sessionStorage.current_page = 1;
     }
-    var url = location.protocol + '//' + document.domain + ':' + "5000" + "/facts" + "?max_results=2&page=" + page;
+    var url = location.protocol + '//' + document.domain + '/' + "api" + "/facts" + "?max_results=2&page=" + page;
     http.open("GET", url, true);
     http.send();
     http.onreadystatechange = function() {
@@ -161,9 +161,9 @@ $(function() {
   </div><!-- /.container-fluid -->
 </nav>
 <!--<div>-->
-   <div class="panel panel-default" style='margin: auto'>
-        <div class="panel-image hide-panel-body">
-          <img src="" style="margin: 0 auto; display: block; max-width: 100%; max-height: 66%" class="panel-image-preview" id="fact_img"/>
+   <div class="panel panel-default">
+        <div style='margin: auto; max-height: 75%' class="panel-image hide-panel-body">
+         <img src="" style="margin: auto; display: block; height: 100%; max-width: 100%; max-height: 80%" class="panel-image-preview" id="fact_img"/>
         </div>
           <div class="panel-body">
             <h4>Title of Image</h4>
