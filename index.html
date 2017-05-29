@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
 
 <!-- Style sheets for the image div -->
-<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="/styles.css">
 
 <!-- Load JQUERY -->
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.0/jquery.min.js"></script>
@@ -52,19 +52,25 @@
 
   // Define function for querying the facts API endpoint
   function getFacts(page, callback, index) {
+    document.getElementById("fact_img").src="https://s3-us-west-2.amazonaws.com/factnom-static/loading-2.gif"
     console.log('requesting API')
     var http = new XMLHttpRequest();
     if (page < 1) {
       page = 1;
       sessionStorage.current_page = 1;
     }
-    var url = location.protocol + '//' + document.domain + '/' + "api" + "/facts" + "?max_results=2&page=" + page;
+    var url = location.protocol + '//' + document.domain + '/' + "api" + "/facts" + '?max_results=10&sort=[("_created", -1)]&page=' + page;
     http.open("GET", url, true);
     http.send();
     http.onreadystatechange = function() {
       if (this.status == 200) {
         if (JSON.parse(http.responseText)._items.length > 0) {
           sessionStorage.current_page_data = http.responseText;
+          data = JSON.parse(http.responseText)
+          // loop through and preload images to cache them locally
+          for (var i = 0; i < data._items.length; i++) {
+            new Image().src = data._items[i].image_url
+          }
         } else {
           sessionStorage.current_page = page - 1
         }
@@ -97,7 +103,14 @@ $(function() {
   // Function to render the fact element
   function RenderFact(index) {
     data = JSON.parse(sessionStorage.current_page_data)
+    if (data._items[index].path != '') {
+      uri = "/facts/" + data._items[index].path
+      window.history.pushState(null, data._items[index].title, uri)
+      console.log(uri)
+    }
     document.getElementById("fact_img").src=data._items[index].image_url
+    document.getElementById("fact_title").innerText = data._items[index].title
+    document.getElementById("fact_body").innerText = data._items[index].body
   }
 
   // Function for the next button
@@ -116,15 +129,14 @@ $(function() {
   
   // Function for the last button
   function lastButton() {
-    console.log('last_button')
     sessionStorage.current_page_index = Number(sessionStorage.current_page_index) - 1
       current_page_length = JSON.parse(sessionStorage.current_page_data)._items.length
       if (Number(sessionStorage.current_page_index) >= 0) {
         RenderFact(sessionStorage.current_page_index)
       } else {
         sessionStorage.current_page = Number(sessionStorage.current_page) -1
-        sessionStorage.current_page_index = 1
-        getFacts(sessionStorage.current_page, RenderFact, 1)
+        sessionStorage.current_page_index = 9
+        getFacts(sessionStorage.current_page, RenderFact, 9)
     }
   }
 
@@ -143,6 +155,7 @@ $(function() {
         <span class="icon-bar"></span>
       </button>
       <a class="navbar-brand" href="#">FactNom</a>
+      <!-- <img src="https://s3-us-west-2.amazonaws.com/factnom-static/Nommie-silhouette.svg" style="width: 100%; height: 100%;" -->
     </div>
 
     <!-- Collect the nav links, forms, and other content for toggling -->
@@ -163,11 +176,11 @@ $(function() {
 <!--<div>-->
    <div class="panel panel-default">
         <div style='margin: auto; max-height: 75%' class="panel-image hide-panel-body">
-         <img src="" style="margin: auto; display: block; height: 100%; max-width: 100%; max-height: 80%" class="panel-image-preview" id="fact_img"/>
+         <img src="https://s3-us-west-2.amazonaws.com/factnom-static/loading-2.gif" style="margin: auto; display: block; height: 100%; max-width: 100%; max-height: 80%" class="panel-image-preview" id="fact_img"/>
         </div>
           <div class="panel-body">
-            <h4>Title of Image</h4>
-              <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed in lobortis nisl, vitae iaculis sapien. Phasellus ultrices gravida massa luctus ornare. Suspendisse blandit quam elit, eu imperdiet neque semper et.</p>
+            <h4 id='fact_title'>Title of Image</h4>
+              <p id='fact_body'>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed in lobortis nisl, vitae iaculis sapien. Phasellus ultrices gravida massa luctus ornare. Suspendisse blandit quam elit, eu imperdiet neque semper et.</p>
            </div>
                 <div class="panel-footer text-center">
                   <!--                    <a href="#Info"><span class="fa fa-info" style="font-size: 30px; vertical-align: bottom;" id="info"></span></a> -->
