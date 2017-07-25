@@ -1,5 +1,10 @@
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1">
+
+<meta id="og_image" property='og:image' content="" />
+<meta property="og:image:width" content=690" />
+<meta property="og:image:height" content=690" />
+<meta name="google-site-verification" content="97rC5yroAQcKHh-qhGRDdAXx3_TOe_povTMdhJm6ebQ" />
 <!-- Latest compiled and minified CSS -->
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
 
@@ -20,11 +25,29 @@
 
 <!-- Main Javascript for the page  -->
 <script type="text/javascript" charset="utf-8">
-
+ 
+  // Google Analytics
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+    ga('create', 'UA-49172614-14', 'auto');
   // do all the processing needed on initial page load
   $(document).ready(function() {
+
+     // check for image path in url
+     var path = window.location.pathname
+     var pathElements = path.split('/')
+     var imagePath = pathElements[2]
+
+     // if an image path is provided, prepare the page indexs
+     if (imagePath) {
+       sessionStorage.current_page = 0
+       sessionStorage.current_page_index = 0
+     }
      // Capture Arrow Keys
      document.onkeydown = checkKey;
+
      // Instantiate Hammer.js and capture swipe events on the image
      var myElement = document.getElementById("fact_img")
      var mc = new Hammer(myElement);
@@ -37,29 +60,34 @@
        lastButton()
      })
     // Get correct content from the API based on current page
-    if (sessionStorage.current_page) {
-      getFacts(sessionStorage.current_page, RenderFact, 0);
-    } else {
+    if ( ! sessionStorage.current_page) {
       sessionStorage.current_page = 1
     }
     // Get current page index and render the right fact
     if (sessionStorage.current_page_index) {
-      getFacts(sessionStorage.current_page, RenderFact, sessionStorage.current_page_index)
+      getFacts(sessionStorage.current_page, RenderFact, sessionStorage.current_page_index, imagePath)
     } else {
       sessionStorage.current_page_index = 0
-      getFacts(sessionStorage.current_page, RenderFact, sessionStorage.current_page_index)
+      getFacts(sessionStorage.current_page, RenderFact, sessionStorage.current_page_index, imagePath)
     }});
 
   // Define function for querying the facts API endpoint
-  function getFacts(page, callback, index) {
+  function getFacts(page, callback, index, imagePath) {
+    // set loading gif
     document.getElementById("fact_img").src="https://s3-us-west-2.amazonaws.com/factnom-static/loading-2.gif"
-    console.log('requesting API')
+    // instantiate XHR request object
     var http = new XMLHttpRequest();
+    // Ensure we have a minimum page size
     if (page < 1) {
       page = 1;
       sessionStorage.current_page = 1;
     }
-    var url = location.protocol + '//' + document.domain + '/' + "api" + "/facts" + '?max_results=10&sort=[("_created", -1)]&page=' + page;
+    // if there is an image path provided, query for that image, else query for a general page
+    if (imagePath) {
+      var url = location.protocol + '//' + document.domain + '/' + "api" + "/facts" + '?where={"path" : "' + imagePath + '"}'
+    } else {
+      var url = location.protocol + '//' + document.domain + '/' + "api" + "/facts" + '?max_results=10&sort=[("_created", -1)]&page=' + page;
+    }
     http.open("GET", url, true);
     http.send();
     http.onreadystatechange = function() {
@@ -85,7 +113,6 @@
  function checkKey(e) {
     e = e || window.event;
     if (e.keyCode == '37') {
-      console.log('left arrow');
       lastButton();
     }
     else if (e.keyCode == '39') {
@@ -106,11 +133,13 @@ $(function() {
     if (data._items[index].path != '') {
       uri = "/facts/" + data._items[index].path
       window.history.pushState(null, data._items[index].title, uri)
-      console.log(uri)
     }
     document.getElementById("fact_img").src=data._items[index].image_url
     document.getElementById("fact_title").innerText = data._items[index].title
     document.getElementById("fact_body").innerText = data._items[index].body
+    $("meta[property='og\\:image']").attr("content", data._items[index].image_url)
+    ga('set', 'page', uri);
+    ga('send', 'pageview');
   }
 
   // Function for the next button
@@ -140,6 +169,14 @@ $(function() {
     }
   }
 
+  function socialShare(destination) {
+    if (destination == 'facebook') {
+      var shareURL = "http://www.facebook.com/share.php?u=" + window.location.href
+    } else if (destination == 'twitter') {
+      var shareURL = "http://twitter.com/intent/tweet?status=" +  window.location.href
+    } 
+    var myWindow = window.open(shareURL, "", "width=600,height=200");
+  }
 </script>
 
 </head>
@@ -154,22 +191,22 @@ $(function() {
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
       </button>
-      <a class="navbar-brand" href="#">FactNom</a>
+      <a class="navbar-brand" href="#">Factnom Beta</a>
       <!-- <img src="https://s3-us-west-2.amazonaws.com/factnom-static/Nommie-silhouette.svg" style="width: 100%; height: 100%;" -->
     </div>
 
     <!-- Collect the nav links, forms, and other content for toggling -->
     <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-      <ul class="nav navbar-nav">
+<!--      <ul class="nav navbar-nav">
         <li class="active"><a href="#">Facts<span class="sr-only">(current)</span></a></li>
         <li><a href="#">Videos</a></li>
-      </ul>
+      </ul> 
       <form class="navbar-form navbar-left">
         <div class="form-group">
           <input type="text" class="form-control" placeholder="Search">
         </div>
         <button type="submit" class="btn btn-default">Submit</button>
-      </form>
+      </form> -->
     </div><!-- /.navbar-collapse -->
   </div><!-- /.container-fluid -->
 </nav>
@@ -184,8 +221,8 @@ $(function() {
            </div>
                 <div class="panel-footer text-center">
                   <!--                    <a href="#Info"><span class="fa fa-info" style="font-size: 30px; vertical-align: bottom;" id="info"></span></a> -->
-                    <a href="#facebook"><span id="FBShare" class="fa fa-facebook" style="font-size: 30px; vertical-align: bottom;"></span></a>
-                    <a href="#twitter"><span class="fa fa-twitter" style="font-size: 30px; vertical-align: bottom;"></span></a>
+                    <a href="#facebook"><span id="FBShare" class="fa fa-facebook" style="font-size: 30px; vertical-align: bottom;" onClick="socialShare('facebook')"></span></a>
+                    <a href="#twitter"><span class="fa fa-twitter" style="font-size: 30px; vertical-align: bottom;" onClick="socialShare('twitter')"></span></a>
                 </div>
         </div>
         <!--</div> -->
